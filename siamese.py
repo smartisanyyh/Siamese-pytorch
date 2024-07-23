@@ -17,7 +17,8 @@ class Siamese(object):
         #   使用自己训练好的模型进行预测一定要修改model_path
         #   model_path指向logs文件夹下的权值文件
         #-----------------------------------------------------#
-        "model_path"        : 'model_data/Omniglot_vgg.pth',
+        # "model_path"        : 'model_data/Omniglot_vgg.pth',
+        "model_path"        : 'logs/best_epoch_weights.pth',
         #-----------------------------------------------------#
         #   输入图片的大小。
         #-----------------------------------------------------#
@@ -31,7 +32,8 @@ class Siamese(object):
         #   是否使用Cuda
         #   没有GPU可以设置成False
         #-------------------------------#
-        "cuda"              : True
+        "cuda"              : False,
+        "mps"              : True
     }
 
     @classmethod
@@ -60,7 +62,8 @@ class Siamese(object):
         #   载入模型与权值
         #---------------------------#
         print('Loading weights into state dict...')
-        device  = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        device  = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+        # device  = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model   = siamese(self.input_shape)
         model.load_state_dict(torch.load(self.model_path, map_location=device))
         self.net = model.eval()
@@ -70,6 +73,9 @@ class Siamese(object):
             self.net = torch.nn.DataParallel(self.net)
             cudnn.benchmark = True
             self.net = self.net.cuda()
+
+        if self.mps:
+            self.net = self.net.to(device)
     
     def letterbox_image(self, image, size):
         image   = image.convert("RGB")
@@ -118,7 +124,10 @@ class Siamese(object):
             if self.cuda:
                 photo_1 = photo_1.cuda()
                 photo_2 = photo_2.cuda()
-                
+            else:
+                photo_1 = photo_1.to(torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"))
+                photo_2 = photo_2.to(torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"))
+
             #---------------------------------------------------#
             #   获得预测结果，output输出为概率
             #---------------------------------------------------#

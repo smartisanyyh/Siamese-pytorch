@@ -2,7 +2,7 @@
 map_out/
 miou_out/
 VOCdevkit/
-datasets/
+# datasets/
 Medical_Datasets/
 lfw/
 logs/

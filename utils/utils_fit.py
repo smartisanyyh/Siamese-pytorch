@@ -26,6 +26,9 @@ def fit_one_epoch(model_train, model, loss, loss_history, optimizer, epoch, epoc
             if cuda:
                 images  = images.cuda(local_rank)
                 targets = targets.cuda(local_rank)
+            else:
+                images  = images.to(torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"))
+                targets = targets.to(torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"))
 
         #----------------------#
         #   清零梯度
@@ -76,7 +79,9 @@ def fit_one_epoch(model_train, model, loss, loss_history, optimizer, epoch, epoc
             if cuda:
                 images  = images.cuda(local_rank)
                 targets = targets.cuda(local_rank)
-                
+            else:
+                images  = images.to(torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"))
+                targets = targets.to(torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"))                
             optimizer.zero_grad()
             outputs = model_train(images)
             output  = loss(outputs, targets)

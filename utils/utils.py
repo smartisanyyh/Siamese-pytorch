@@ -8,7 +8,8 @@ import numpy as np
 from PIL import Image
 
 from .utils_aug import center_crop, resize
-
+def list_non_hidden_files(directory):
+    return [f for f in os.listdir(directory) if not f.startswith('.')]
 
 def load_dataset(dataset_path, train_own_data, train_ratio):
     types       = 0
@@ -20,12 +21,12 @@ def load_dataset(dataset_path, train_own_data, train_ratio):
         #-------------------------------------------------------------#
         #   自己的数据集，遍历大循环
         #-------------------------------------------------------------#
-        for character in os.listdir(train_path):
+        for character in list_non_hidden_files(train_path):
             #-------------------------------------------------------------#
             #   对每张图片进行遍历
             #-------------------------------------------------------------#
             character_path = os.path.join(train_path, character)
-            for image in os.listdir(character_path):
+            for image in list_non_hidden_files(character_path):
                 lines.append(os.path.join(character_path, image))
                 labels.append(types)
             types += 1
@@ -55,7 +56,7 @@ def load_dataset(dataset_path, train_own_data, train_ratio):
     shuffle_index = np.arange(len(lines), dtype=np.int32)
     shuffle(shuffle_index)
     random.seed(None)
-    lines    = np.array(lines,dtype=np.object)
+    lines    = np.array(lines,dtype=object)
     labels   = np.array(labels)
     lines    = lines[shuffle_index]
     labels   = labels[shuffle_index]

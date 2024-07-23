@@ -20,7 +20,7 @@ if __name__ == "__main__":
     #   是否使用Cuda
     #   没有GPU可以设置成False
     #----------------------------------------------------#
-    Cuda            = True
+    Cuda            = False
     #---------------------------------------------------------------------#
     #   distributed     用于指定是否使用单机多卡分布式运行
     #                   终端指令仅支持Ubuntu。CUDA_VISIBLE_DEVICES用于在Ubuntu下指定显卡。
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     #   训练自己的数据和Omniglot数据格式不一样。
     #   详情可看README.md
     #----------------------------------------------------#
-    train_own_data  = False
+    train_own_data  = True
     #-------------------------------#
     #   用于指定是否使用VGG预训练权重
     #   有两种获取方式
@@ -84,7 +84,9 @@ if __name__ == "__main__":
     #   网络一般不从0开始训练，至少会使用主干部分的权值，有些论文提到可以不用预训练，主要原因是他们 数据集较大 且 调参能力优秀。
     #   如果一定要训练网络的主干部分，可以了解imagenet数据集，首先训练分类模型，分类模型的 主干部分 和该模型通用，基于此进行训练。
     #----------------------------------------------------------------------------------------------------------------------------#
-    model_path      = ""
+    # model_path      = "model_data/Omniglot_vgg.pth"
+    model_path      = "360.pth"
+    # model_path      = ""
 
     #----------------------------------------------------------------------------------------------------------------------------#
     #   显存不足与数据集大小无关，提示显存不足请调小batch_size。
@@ -110,7 +112,7 @@ if __name__ == "__main__":
     #------------------------------------------------------#
     Init_Epoch          = 0
     Epoch               = 100
-    batch_size          = 32
+    batch_size          = 16
     
     #------------------------------------------------------------------#
     #   其它训练参数：学习率、优化器、学习率下降有关
@@ -141,7 +143,7 @@ if __name__ == "__main__":
     #------------------------------------------------------------------#
     #   save_period     多少个epoch保存一次权值
     #------------------------------------------------------------------#
-    save_period         = 10
+    save_period         = 30
     #------------------------------------------------------------------#
     #   save_dir        权值与日志文件保存的文件夹
     #------------------------------------------------------------------#
@@ -166,7 +168,7 @@ if __name__ == "__main__":
             print(f"[{os.getpid()}] (rank = {rank}, local_rank = {local_rank}) training...")
             print("Gpu Device Count : ", ngpus_per_node)
     else:
-        device          = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        device          = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
         local_rank      = 0
         rank            = 0
 
@@ -178,7 +180,7 @@ if __name__ == "__main__":
         else:
             download_weights("vgg16")  
 
-    model = Siamese(input_shape, pretrained)
+    model = Siamese(input_shape, pretrained).to(device)
     if model_path != '':
         #------------------------------------------------------#
         #   权值文件请看README，百度网盘下载
@@ -211,7 +213,7 @@ if __name__ == "__main__":
     #----------------------#
     #   获得损失函数
     #----------------------#
-    loss = nn.BCEWithLogitsLoss()
+    loss = nn.BCEWithLogitsLoss().to(device)
     #----------------------#
     #   记录Loss
     #----------------------#
@@ -254,7 +256,7 @@ if __name__ == "__main__":
     #----------------------------------------------------#
     #   训练集和验证集的比例。
     #----------------------------------------------------#
-    train_ratio = 0.9
+    train_ratio = 0.7
     train_lines, train_labels, val_lines, val_labels = load_dataset(dataset_path, train_own_data, train_ratio)
     num_train   = len(train_lines)
     num_val     = len(val_lines)
